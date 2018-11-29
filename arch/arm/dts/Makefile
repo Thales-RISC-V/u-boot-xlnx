@@ -97,7 +97,12 @@ dtb-$(CONFIG_ARCH_ZYNQ) += zynq-zc702.dtb \
 	zynq-zc770-xm010.dtb \
 	zynq-zc770-xm011.dtb \
 	zynq-zc770-xm012.dtb \
-	zynq-zc770-xm013.dtb
+	zynq-zc770-xm013.dtb \
+	zynq-mars-zx3.dtb \
+	zynq-mars-zx3-sta.dtb \
+	zynq-mars-zx2.dtb \
+	zynq-mercury.dtb \
+	zynq-cosmos-xzq10.dtb
 dtb-$(CONFIG_ARCH_ZYNQMP) += \
 	zynqmp-ep108.dtb			\
 	zynqmp-zcu100.dtb			\
@@ -110,6 +115,8 @@ dtb-$(CONFIG_ARCH_ZYNQMP) += \
 	zynqmp-zc1751-xm018-dc4.dtb		\
 	zynqmp-zc1751-xm019-dc5.dtb		\
 	zynqmp-mini-qspi.dtb			\
+	mercury-xu1.dtb				\
+	mars-xu3.dtb				\
 	zynqmp-mini-nand.dtb
 dtb-$(CONFIG_AM33XX) += am335x-boneblack.dtb am335x-bone.dtb \
 	am335x-draco.dtb \

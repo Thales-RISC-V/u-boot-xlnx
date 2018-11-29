@@ -316,12 +316,20 @@ static int zynq_qspi_child_pre_probe(struct udevice *bus)
 	return 0;
 }
 
+#if defined(CONFIG_MARS_ZX) || defined(CONFIG_MERCURY_ZX)
+extern void zx_set_storage(int store);
+#endif
+
 static int zynq_qspi_probe(struct udevice *bus)
 {
 	struct zynq_qspi_platdata *plat = dev_get_platdata(bus);
 	struct zynq_qspi_priv *priv = dev_get_priv(bus);
 
 	debug("zynq_qspi_probe:  bus:%p, priv:%p \n", bus, priv);
+
+#if defined(CONFIG_MARS_ZX) || defined(CONFIG_MERCURY_ZX)
+	zx_set_storage(ZX_QSPI);
+#endif
 
 	priv->regs = plat->regs;
 	zynq_qspi_check_is_dual_flash(priv);
@@ -774,7 +782,6 @@ static int zynq_qspi_claim_bus(struct udevice *dev)
 	struct zynq_qspi_priv *priv = dev_get_priv(bus);
 	struct zynq_qspi_regs *regs = priv->regs;
 
-	debug("%s\n", __func__);
 	writel(ZYNQ_QSPI_ENABLE_ENABLE_MASK, &regs->enbr);
 
 	return 0;

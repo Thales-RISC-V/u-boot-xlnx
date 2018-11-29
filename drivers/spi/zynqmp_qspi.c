@@ -18,6 +18,8 @@
 #include <asm/arch/clk.h>
 #include "../mtd/spi/sf_internal.h"
 
+DECLARE_GLOBAL_DATA_PTR;
+
 #define ZYNQMP_QSPI_GFIFO_STRT_MODE_MASK	(1 << 29)
 #define ZYNQMP_QSPI_CONFIG_MODE_EN_MASK	(3 << 30)
 #define ZYNQMP_QSPI_CONFIG_DMA_MODE	(2 << 30)
@@ -138,6 +140,7 @@ struct zynqmp_qspi_platdata {
 	struct zynqmp_qspi_dma_regs *dma_regs;
 	u32 frequency;
 	u32 speed_hz;
+	u8 bytemode;
 };
 
 struct zynqmp_qspi_priv {
@@ -156,6 +159,7 @@ struct zynqmp_qspi_priv {
 	unsigned int bus;
 	unsigned int stripe;
 	unsigned cs_change:1;
+	u8 bytemode;
 };
 
 static u8 last_cmd;
@@ -169,6 +173,9 @@ static int zynqmp_qspi_ofdata_to_platdata(struct udevice *bus)
 	plat->regs = (struct zynqmp_qspi_regs *)(dev_get_addr(bus) + 0x100);
 	plat->dma_regs = (struct zynqmp_qspi_dma_regs *)(dev_get_addr(bus) +
 							 0x800);
+
+	plat->bytemode = fdtdec_get_int(gd->fdt_blob, bus->of_offset,
+							 "bytemode", SPI_4BYTE_MODE);
 
 	plat->frequency = 166666666;
 	plat->speed_hz = plat->frequency / 2;
@@ -313,7 +320,7 @@ static int zynqmp_qspi_child_pre_probe(struct udevice *bus)
 	slave->option = priv->is_dual;
 	slave->op_mode_rx = SPI_OPM_RX_QOF;
 	slave->op_mode_tx = SPI_OPM_TX_QPP;
-	slave->bytemode = SPI_4BYTE_MODE;
+	slave->bytemode = priv->bytemode;
 
 	return 0;
 }
@@ -347,6 +354,7 @@ static int zynqmp_qspi_probe(struct udevice *bus)
 
 	priv->regs = plat->regs;
 	priv->dma_regs = plat->dma_regs;
+	priv->bytemode = plat->bytemode;
 	zynqmp_qspi_check_is_dual_flash(priv);
 
 	if (priv->is_dual == -1) {
@@ -408,20 +416,18 @@ static int zynqmp_qspi_fill_tx_fifo(struct zynqmp_qspi_priv *priv, u32 size)
 			} else {
 				switch (size) {
 				case 1:
-					data = *((u8 *)buf);
-					buf += 1;
+					data  = ((u8 *)buf)[0];
 					data |= 0xFFFFFF00;
 					break;
 				case 2:
-					data = *((u16 *)buf);
-					buf += 2;
+					data  = ((u8 *)buf)[0];
+					data |= ((u8 *)buf)[1] << 8;
 					data |= 0xFFFF0000;
 					break;
 				case 3:
-					data = *((u16 *)buf);
-					buf += 2;
-					data |= (*((u8 *)buf) << 16);
-					buf += 1;
+					data  = ((u8 *)buf)[0];
+					data |= ((u8 *)buf)[1] << 8;
+					data |= ((u8 *)buf)[2] << 16;
 					data |= 0xFF000000;
 					break;
 				}
